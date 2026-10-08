@@ -4,9 +4,11 @@
 
 const $ = (id) => document.getElementById(id);
 
-// Set default statement date to today
+// Set statement date to today
 window.addEventListener('DOMContentLoaded', () => {
-  $('statementDate').valueAsDate = new Date();
+  const today = new Date();
+  $('statementDate').valueAsDate = today;
+  console.log('SOA CRM loaded ✅');
 });
 
 // ---------- Utilities ----------
@@ -45,7 +47,7 @@ function addDays(dateStr, days) {
 }
 
 // ============================================================
-//  MAIN CALCULATION
+//  CALCULATION
 // ============================================================
 function calculateSOA() {
   const principal    = parseFloat($('principal').value) || 0;
@@ -70,7 +72,6 @@ function calculateSOA() {
 
   const totalOutstanding = principal + total4Interest + defaultInterest + penalCharges;
 
-  // Waiver = Outstanding − FinalOverdue
   let waiver = totalOutstanding - finalOverdue;
   if (waiver < 0) waiver = 0;
 
@@ -86,176 +87,100 @@ function calculateSOA() {
 }
 
 // ============================================================
-//  RENDER SOA
+//  RENDER
 // ============================================================
 function renderSOA() {
-  // ✅ SAFE VALIDATION — sirf itna check karo ki dates aur amounts ho
-  if (!$('disbursalDate').value) {
-    alert('Please select Date of Disbursal');
-    $('disbursalDate').focus();
-    return;
-  }
-  if (!$('statementDate').value) {
-    alert('Please select Statement Date');
-    $('statementDate').focus();
-    return;
-  }
-  if (!$('principal').value || parseFloat($('principal').value) <= 0) {
-    alert('Please enter Principal Disbursed Amount');
-    $('principal').focus();
-    return;
-  }
-  if (!$('finalOverdue').value || parseFloat($('finalOverdue').value) <= 0) {
-    alert('Please enter Customer Final Overdue Amount');
-    $('finalOverdue').focus();
-    return;
-  }
+  console.log('Generate button clicked');
 
   const data = calculateSOA();
 
-  // ---------- Customer Details (safe fallback with —) ----------
-  $('outName').textContent     = $('customerName').value.trim() || '—';
-  $('outPan').textContent      = $('panNumber').value.trim().toUpperCase() || '—';
-  $('outStatus').textContent   = $('accountStatus').value.trim() || '—';
+  // Customer details
+  $('outName').textContent     = ($('customerName').value || '').trim() || '—';
+  $('outPan').textContent      = ($('panNumber').value || '').trim().toUpperCase() || '—';
+  $('outStatus').textContent   = ($('accountStatus').value || '').trim() || '—';
   $('outDisbDate').textContent = fmtDate(data.disbDate);
 
   const disbFmt = fmtDate(data.disbDate);
   const stmtFmt = fmtDate(data.stmtDate);
 
-  // ---------- ACCOUNT BREAKDOWN ----------
-  const breakdown = [
-    {
-      comp: 'Principal',
-      calc: 'Disbursed Amount',
-      amt: data.principal
-    },
-    {
-      comp: `First 7 Days Interest @ ${data.rateFirst}% p.m. SI`,
-      calc: `${data.principal.toFixed(2)} × ${data.rateFirst}% × 7/30`,
-      amt: data.first7Interest
-    },
-    {
-      comp: `Post-Due Interest @ ${data.rateFirst}% p.m. SI`,
-      calc: `${data.principal.toFixed(2)} × ${data.rateFirst}% × ${data.postDueDays}/30`,
-      amt: data.postDueInterest
-    },
-    {
-      comp: `Total ${data.rateFirst}% Interest`,
-      calc: `${inr(data.first7Interest)} + ${inr(data.postDueInterest)}`,
-      amt: data.total4Interest,
-      bold: true
-    },
-    {
-      comp: `Default Interest @ ${data.defaultRate}% p.m. SI`,
-      calc: `${data.principal.toFixed(2)} × ${data.defaultRate}% × ${data.postDueDays}/30`,
-      amt: data.defaultInterest
-    },
-    {
-      comp: 'Penal Charges',
-      calc: `${inr(data.penalBase)} × ${data.completedYears} completed years`,
-      amt: data.penalCharges
-    },
-    {
-      comp: 'Total Outstanding Calculated',
-      calc: `${inr(data.principal)} + ${inr(data.total4Interest)} + ${inr(data.defaultInterest)} + ${inr(data.penalCharges)}`,
-      amt: data.totalOutstanding,
-      bold: true
-    },
-    {
-      comp: 'Concessionary Waiver / Adjustment',
-      calc: 'Special Account Settlement Discount',
-      amt: -data.waiver,
-      discount: true
-    },
-    {
-      comp: 'Net Outstanding Overdue Payable',
-      calc: 'Final Payable Balance',
-      amt: data.netPayable,
-      final: true
-    }
+  // Breakdown
+  const rows = [
+    ['Principal', 'Disbursed Amount', data.principal, ''],
+    [`First 7 Days Interest @ ${data.rateFirst}% p.m. SI`,
+      `${data.principal.toFixed(2)} × ${data.rateFirst}% × 7/30`,
+      data.first7Interest, ''],
+    [`Post-Due Interest @ ${data.rateFirst}% p.m. SI`,
+      `${data.principal.toFixed(2)} × ${data.rateFirst}% × ${data.postDueDays}/30`,
+      data.postDueInterest, ''],
+    [`Total ${data.rateFirst}% Interest`,
+      `${inr(data.first7Interest)} + ${inr(data.postDueInterest)}`,
+      data.total4Interest, 'total-row'],
+    [`Default Interest @ ${data.defaultRate}% p.m. SI`,
+      `${data.principal.toFixed(2)} × ${data.defaultRate}% × ${data.postDueDays}/30`,
+      data.defaultInterest, ''],
+    ['Penal Charges',
+      `${inr(data.penalBase)} × ${data.completedYears} completed years`,
+      data.penalCharges, ''],
+    ['Total Outstanding Calculated',
+      `${inr(data.principal)} + ${inr(data.total4Interest)} + ${inr(data.defaultInterest)} + ${inr(data.penalCharges)}`,
+      data.totalOutstanding, 'total-row'],
+    ['Concessionary Waiver / Adjustment',
+      'Special Account Settlement Discount',
+      -data.waiver, 'discount-row'],
+    ['Net Outstanding Overdue Payable',
+      'Final Payable Balance',
+      data.netPayable, 'final-row']
   ];
 
   let html = '';
-  breakdown.forEach(row => {
-    let cls = '';
-    if (row.final) cls = 'final-row';
-    else if (row.discount) cls = 'discount-row';
-    else if (row.bold) cls = 'total-row';
-    html += `<tr class="${cls}">
-      <td>${row.comp}</td>
-      <td>${row.calc}</td>
-      <td class="right">${inr(row.amt)}</td>
+  rows.forEach(r => {
+    html += `<tr class="${r[3]}">
+      <td>${r[0]}</td>
+      <td>${r[1]}</td>
+      <td class="right">${inr(r[2])}</td>
     </tr>`;
   });
   $('breakdownBody').innerHTML = html;
 
-  // ---------- TRANSACTION LEDGER ----------
-  const ledger = [
-    {
-      date: disbFmt,
-      desc: 'Loan Disbursal Principal',
-      amt: data.principal,
-      bal: data.principal
-    },
-    {
-      date: addDays(data.disbDate, 7),
-      desc: 'Contractual Interest (First 7 Days)',
-      amt: data.first7Interest,
-      bal: data.principal + data.first7Interest
-    },
-    {
-      date: `${addDays(data.disbDate, 7)} – ${stmtFmt}`,
-      desc: `Overdue Interest @ ${data.rateFirst}% p.m.`,
-      amt: data.postDueInterest,
-      bal: data.principal + data.first7Interest + data.postDueInterest
-    },
-    {
-      date: `${addDays(data.disbDate, 7)} – ${stmtFmt}`,
-      desc: `Default Interest @ ${data.defaultRate}% p.m.`,
-      amt: data.defaultInterest,
-      bal: data.principal + data.total4Interest + data.defaultInterest
-    },
-    {
-      date: stmtFmt,
-      desc: `Penal Charges (${data.completedYears} Completed Years)`,
-      amt: data.penalCharges,
-      bal: data.totalOutstanding
-    },
-    {
-      date: stmtFmt,
-      desc: 'Concessionary Waiver Adjustment',
-      amt: -data.waiver,
-      bal: data.netPayable
-    }
+  // Ledger
+  const led = [
+    [disbFmt, 'Loan Disbursal Principal', data.principal, data.principal],
+    [addDays(data.disbDate, 7), 'Contractual Interest (First 7 Days)', data.first7Interest, data.principal + data.first7Interest],
+    [`${addDays(data.disbDate, 7)} – ${stmtFmt}`, `Overdue Interest @ ${data.rateFirst}% p.m.`, data.postDueInterest, data.principal + data.first7Interest + data.postDueInterest],
+    [`${addDays(data.disbDate, 7)} – ${stmtFmt}`, `Default Interest @ ${data.defaultRate}% p.m.`, data.defaultInterest, data.principal + data.total4Interest + data.defaultInterest],
+    [stmtFmt, `Penal Charges (${data.completedYears} Completed Years)`, data.penalCharges, data.totalOutstanding],
+    [stmtFmt, 'Concessionary Waiver Adjustment', -data.waiver, data.netPayable]
   ];
 
   let lhtml = '';
-  ledger.forEach(row => {
+  led.forEach(r => {
     lhtml += `<tr>
-      <td>${row.date}</td>
-      <td>${row.desc}</td>
-      <td class="right">${inr(row.amt)}</td>
-      <td class="right">${inr(row.bal)}</td>
+      <td>${r[0]}</td>
+      <td>${r[1]}</td>
+      <td class="right">${inr(r[2])}</td>
+      <td class="right">${inr(r[3])}</td>
     </tr>`;
   });
 
-  const status = $('accountStatus').value.trim() || 'DEFAULT';
-
+  const status = ($('accountStatus').value || '').trim() || 'DEFAULT';
   lhtml += `<tr class="final-row">
     <td colspan="3">Net Outstanding Balance</td>
     <td class="right">${inr(data.netPayable)} (${status})</td>
   </tr>`;
-
   $('ledgerBody').innerHTML = lhtml;
 
+  // Show preview
   $('soaPreview').classList.remove('hidden');
   $('soaPreview').scrollIntoView({ behavior: 'smooth' });
+
+  console.log('SOA generated successfully ✅', data);
 }
 
 // ============================================================
 //  PDF DOWNLOAD
 // ============================================================
 async function downloadPDF() {
+  console.log('Download PDF clicked');
   const { jsPDF } = window.jspdf;
   const element = $('soaContent');
 
@@ -265,9 +190,7 @@ async function downloadPDF() {
     scale: 2.5,
     useCORS: true,
     backgroundColor: '#ffffff',
-    logging: false,
-    windowWidth: element.scrollWidth,
-    windowHeight: element.scrollHeight
+    logging: false
   });
 
   const imgData = canvas.toDataURL('image/png');
@@ -292,20 +215,23 @@ async function downloadPDF() {
     heightLeft -= (pageHeight - margin * 2);
   }
 
-  const name = ($('customerName').value.trim() || 'Customer').replace(/\s+/g, '_');
-  const pan  = ($('panNumber').value.trim() || 'PAN').toUpperCase();
+  const name = ($('customerName').value || 'Customer').trim().replace(/\s+/g, '_') || 'Customer';
+  const pan  = ($('panNumber').value || 'PAN').trim().toUpperCase() || 'PAN';
   const date = new Date().toISOString().slice(0, 10);
 
   pdf.save(`SOA_${name}_${pan}_${date}.pdf`);
+  console.log('PDF downloaded ✅');
 }
 
 // ============================================================
-//  EVENT LISTENERS
+//  EVENTS
 // ============================================================
-$('generateBtn').addEventListener('click', renderSOA);
-$('downloadPdfBtn').addEventListener('click', downloadPDF);
-$('editBtn').addEventListener('click', () => {
-  $('soaPreview').classList.add('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+document.addEventListener('DOMContentLoaded', () => {
+  $('generateBtn').addEventListener('click', renderSOA);
+  $('downloadPdfBtn').addEventListener('click', downloadPDF);
+  $('editBtn').addEventListener('click', () => {
+    $('soaPreview').classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  $('printBtn').addEventListener('click', () => window.print());
 });
-$('printBtn').addEventListener('click', () => window.print());
