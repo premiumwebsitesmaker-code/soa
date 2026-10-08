@@ -1,16 +1,13 @@
 /* ============================================================
-   NIFCPL — SOA CRM Logic + PDF Generation
-   Smart Reverse Calculation for Maximum Discount Display
+   SOA CRM — Calculation + PDF Generation
    ============================================================ */
 
 const $ = (id) => document.getElementById(id);
 
-// Set default statement date to today
 window.addEventListener('DOMContentLoaded', () => {
   $('statementDate').valueAsDate = new Date();
 });
 
-// ---------- Utilities ----------
 function inr(num) {
   const n = Number(num);
   const sign = n < 0 ? '-' : '';
@@ -44,7 +41,7 @@ function addDays(dateStr, days) {
 }
 
 // ============================================================
-//  SMART CALCULATION — Reverse Discount Engine
+//  MAIN CALCULATION
 // ============================================================
 function calculateSOA() {
   const principal    = parseFloat($('principal').value) || 0;
@@ -59,7 +56,6 @@ function calculateSOA() {
   const totalDays    = daysBetween(disbDate, stmtDate);
   const postDueDays  = totalDays - first7Days;
 
-  // Forward calculation
   const first7Interest  = principal * (rateFirst / 100) * (first7Days / 30);
   const postDueInterest = principal * (rateFirst / 100) * (postDueDays / 30);
   const total4Interest  = first7Interest + postDueInterest;
@@ -70,14 +66,11 @@ function calculateSOA() {
 
   const totalOutstanding = principal + total4Interest + defaultInterest + penalCharges;
 
-  // 🔥 REVERSE CALCULATION: Discount = Outstanding − Final Overdue
+  // 🔥 Waiver = Outstanding − FinalOverdue
   let waiver = totalOutstanding - finalOverdue;
-
-  // Safety: Waiver cannot be negative
   if (waiver < 0) waiver = 0;
 
-  // Net payable = Final overdue (fixed)
-  const netPayable = finalOverdue;
+  const netPayable = totalOutstanding - waiver;
 
   return {
     principal, disbDate, stmtDate, rateFirst, defaultRate, penalBase,
@@ -94,7 +87,6 @@ function calculateSOA() {
 function renderSOA() {
   const data = calculateSOA();
 
-  // Customer details
   $('outName').textContent     = $('customerName').value || '—';
   $('outPan').textContent      = $('panNumber').value || '—';
   $('outStatus').textContent   = $('accountStatus').value || '—';
@@ -145,7 +137,8 @@ function renderSOA() {
     {
       comp: 'Concessionary Waiver / Adjustment',
       calc: 'Special Account Settlement Discount',
-      amt: -data.waiver
+      amt: -data.waiver,
+      discount: true
     },
     {
       comp: 'Net Outstanding Overdue Payable',
@@ -159,6 +152,7 @@ function renderSOA() {
   breakdown.forEach(row => {
     let cls = '';
     if (row.final) cls = 'final-row';
+    else if (row.discount) cls = 'discount-row';
     else if (row.bold) cls = 'total-row';
     html += `<tr class="${cls}">
       <td>${row.comp}</td>
@@ -225,11 +219,6 @@ function renderSOA() {
 
   $('ledgerBody').innerHTML = lhtml;
 
-  // ---------- SAVINGS HIGHLIGHT ----------
-  $('savingsAmount').textContent = inr(data.waiver);
-  $('savingsFinal').textContent  = inr(data.netPayable);
-
-  // Show preview
   $('soaPreview').classList.remove('hidden');
   $('soaPreview').scrollIntoView({ behavior: 'smooth' });
 }
