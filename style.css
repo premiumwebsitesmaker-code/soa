@@ -1,0 +1,192 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  padding: 20px;
+}
+
+.container { max-width: 1200px; margin: 0 auto; }
+
+h1 { font-size: 28px; color: #1a365d; }
+.subtitle { color: #4a5568; margin-bottom: 20px; }
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 18px;
+  color: #2d3748;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.form-group { display: flex; flex-direction: column; }
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49,130,206,0.15);
+}
+
+.btn-primary, .btn-success, .btn-secondary {
+  margin-top: 20px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary { background: #3182ce; color: #fff; }
+.btn-primary:hover { background: #2b6cb0; }
+
+.btn-success { background: #38a169; color: #fff; }
+.btn-success:hover { background: #2f855a; }
+
+.btn-secondary { background: #e2e8f0; color: #2d3748; }
+.btn-secondary:hover { background: #cbd5e0; }
+
+.hidden { display: none !important; }
+
+.soa-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* ============ SOA PDF STYLES ============ */
+.soa-content {
+  background: #fff;
+  padding: 32px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.soa-header {
+  text-align: center;
+  border-bottom: 3px solid #1a365d;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.soa-header h2 {
+  font-size: 22px;
+  color: #1a365d;
+  letter-spacing: 1px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.details-box {
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f7fafc;
+}
+
+.details-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2b6cb0;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.details-row {
+  font-size: 13px;
+  margin: 4px 0;
+  color: #2d3748;
+}
+
+.details-row span { color: #718096; }
+
+.section-title {
+  font-size: 15px;
+  color: #1a365d;
+  margin: 24px 0 12px;
+  padding: 8px 12px;
+  background: #edf2f7;
+  border-left: 4px solid #3182ce;
+  border-radius: 4px;
+}
+
+.soa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.soa-table thead th {
+  background: #1a365d;
+  color: #fff;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+
+.soa-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #2d3748;
+}
+
+.soa-table tbody tr:nth-child(even) { background: #f7fafc; }
+
+.soa-table .right { text-align: right; }
+
+.soa-table .total-row td {
+  font-weight: 700;
+  background: #ebf8ff !important;
+  color: #1a365d;
+}
+
+.soa-table .final-row td {
+  font-weight: 700;
+  background: #c6f6d5 !important;
+  color: #22543d;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .details-grid { grid-template-columns: 1fr; }
+  .soa-table { font-size: 11px; }
+}

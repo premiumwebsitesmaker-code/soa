@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SOA CRM - Statement of Account Generator</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h1>📋 SOA CRM</h1>
+  <p class="subtitle">Statement of Account Generator</p>
+
+  <!-- ================= INPUT FORM ================= -->
+  <div class="card">
+    <h2>Customer Details</h2>
+
+    <div class="grid">
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="customerName" placeholder="RAVINDRA ABU GODAGE" />
+      </div>
+
+      <div class="form-group">
+        <label>PAN Number</label>
+        <input type="text" id="panNumber" placeholder="AZTPG0724H" />
+      </div>
+
+      <div class="form-group">
+        <label>Account Status</label>
+        <input type="text" id="accountStatus" placeholder="DEFAULT / OVERDUE" value="DEFAULT / OVERDUE" />
+      </div>
+
+      <div class="form-group">
+        <label>Principal Disbursed Amount (₹)</label>
+        <input type="number" id="principal" placeholder="2000" value="2000" />
+      </div>
+
+      <div class="form-group">
+        <label>Date of Disbursal</label>
+        <input type="date" id="disbursalDate" />
+      </div>
+
+      <div class="form-group">
+        <label>Statement Date (Today)</label>
+        <input type="date" id="statementDate" />
+      </div>
+
+      <div class="form-group">
+        <label>Interest Rate (% p.m. SI) — First 7 Days</label>
+        <input type="number" id="interestRate" value="4" step="0.01" />
+      </div>
+
+      <div class="form-group">
+        <label>Default Interest Rate (% p.m. SI)</label>
+        <input type="number" id="defaultRate" value="3" step="0.01" />
+      </div>
+
+      <div class="form-group">
+        <label>Penal Charge Base (₹)</label>
+        <input type="number" id="penalBase" value="1500" />
+      </div>
+
+      <div class="form-group">
+        <label>Concessionary Waiver / Adjustment (₹)</label>
+        <input type="number" id="waiver" value="9947.34" step="0.01" />
+      </div>
+    </div>
+
+    <button id="generateBtn" class="btn-primary">⚙️ Generate SOA</button>
+  </div>
+
+  <!-- ================= SOA PREVIEW ================= -->
+  <div id="soaPreview" class="soa-preview hidden">
+    <div class="soa-actions">
+      <button id="downloadPdfBtn" class="btn-success">⬇️ Download PDF</button>
+      <button id="editBtn" class="btn-secondary">✏️ Edit Details</button>
+    </div>
+
+    <!-- ============ PDF CONTENT (Same as given PDF) ============ -->
+    <div id="soaContent" class="soa-content">
+
+      <div class="soa-header">
+        <h2>STATEMENT SUMMARY</h2>
+      </div>
+
+      <!-- BORROWER + LOAN ACCOUNT DETAILS -->
+      <div class="details-grid">
+        <div class="details-box">
+          <div class="details-title">BORROWER DETAILS</div>
+          <div class="details-row"><span>Customer Name:</span> <b id="outName">—</b></div>
+          <div class="details-row"><span>PAN:</span> <b id="outPan">—</b></div>
+        </div>
+        <div class="details-box">
+          <div class="details-title">LOAN ACCOUNT DETAILS</div>
+          <div class="details-row"><span>Account Status:</span> <b id="outStatus">—</b></div>
+          <div class="details-row"><span>Date of Disbursal:</span> <b id="outDisbDate">—</b></div>
+        </div>
+      </div>
+
+      <!-- ACCOUNT BREAKDOWN -->
+      <h3 class="section-title">ACCOUNT BREAKDOWN</h3>
+      <table class="soa-table">
+        <thead>
+          <tr>
+            <th>COMPONENT</th>
+            <th>CALCULATION DETAIL</th>
+            <th class="right">AMOUNT (INR)</th>
+          </tr>
+        </thead>
+        <tbody id="breakdownBody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+
+      <!-- TRANSACTION LEDGER -->
+      <h3 class="section-title">TRANSACTION LEDGER</h3>
+      <table class="soa-table">
+        <thead>
+          <tr>
+            <th>TRANSACTION DATE</th>
+            <th>DESCRIPTION</th>
+            <th class="right">AMOUNT (INR)</th>
+            <th class="right">BALANCE (INR)</th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
