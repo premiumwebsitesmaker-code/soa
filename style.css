@@ -27,6 +27,7 @@ body {
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 22px;
+  flex-shrink: 0;
 }
 
 .crm-title h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.4px; }
@@ -89,15 +90,7 @@ body {
   color: #065f46;
 }
 
-.highlight-input input:focus {
-  border-color: #d69e2e !important;
-  box-shadow: 0 0 0 3px rgba(246,200,95,0.3) !important;
-}
-
-.highlight-input label {
-  color: #b7791f;
-  font-weight: 700;
-}
+.highlight-input label { color: #b7791f; font-weight: 700; }
 
 .btn-primary, .btn-success, .btn-secondary {
   margin-top: 22px;
@@ -133,14 +126,8 @@ body {
 
 .hidden { display: none !important; }
 
-.soa-actions {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
+.soa-actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 
-/* ==================== SOA STYLING ==================== */
 .soa-content {
   background: #fff;
   padding: 0 0 30px 0;
@@ -170,20 +157,15 @@ body {
 }
 
 .lh-text h1 {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
-  line-height: 1.35;
+  font-size: 16px; font-weight: 700;
+  letter-spacing: 0.6px; line-height: 1.35;
   text-transform: uppercase;
 }
 
 .lh-tag {
-  font-size: 12px;
-  color: #f6c85f;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-top: 4px;
-  font-weight: 600;
+  font-size: 12px; color: #f6c85f;
+  letter-spacing: 3px; text-transform: uppercase;
+  margin-top: 4px; font-weight: 600;
 }
 
 .soa-title-bar {
@@ -327,11 +309,7 @@ body {
   border-bottom: 1.5px solid #0b2545;
   margin-bottom: 6px;
 }
-.sign-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #0b2545;
-}
+.sign-label { font-size: 11px; font-weight: 700; color: #0b2545; }
 
 @media (max-width: 720px) {
   .details-grid { grid-template-columns: 1fr; }
