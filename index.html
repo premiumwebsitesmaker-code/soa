@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SOA CRM — Statement of Account Generator</title>
+<title>SOA CRM</title>
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -12,7 +12,6 @@
 
 <div class="container">
 
-  <!-- ==================== CRM HEADER ==================== -->
   <div class="crm-header">
     <div class="crm-logo">NI</div>
     <div class="crm-title">
@@ -21,7 +20,6 @@
     </div>
   </div>
 
-  <!-- ==================== INPUT FORM ==================== -->
   <div class="card" id="inputCard">
     <h2>📝 Customer Details</h2>
 
@@ -71,7 +69,6 @@
         <input type="number" id="penalBase" value="1500" step="0.01" />
       </div>
 
-      <!-- 🔥 FINAL OVERDUE INPUT -->
       <div class="form-group highlight-input">
         <label>🎯 Customer Final Overdue (₹) — Jo Pay Karna Hai</label>
         <input type="number" id="finalOverdue" placeholder="e.g. 12360" step="0.01" />
@@ -81,7 +78,6 @@
     <button id="generateBtn" class="btn-primary">⚙️ Generate SOA</button>
   </div>
 
-  <!-- ==================== SOA PREVIEW ==================== -->
   <div id="soaPreview" class="hidden">
 
     <div class="soa-actions">
@@ -90,10 +86,8 @@
       <button id="printBtn" class="btn-secondary">🖨️ Print</button>
     </div>
 
-    <!-- ============ ACTUAL SOA (PDF Content) ============ -->
     <div id="soaContent" class="soa-content">
 
-      <!-- ===== COMPANY LETTERHEAD ===== -->
       <div class="soa-letterhead">
         <div class="lh-logo">NI</div>
         <div class="lh-text">
@@ -102,11 +96,8 @@
         </div>
       </div>
 
-      <div class="soa-title-bar">
-        STATEMENT OF ACCOUNT
-      </div>
+      <div class="soa-title-bar">STATEMENT OF ACCOUNT</div>
 
-      <!-- ===== BORROWER + LOAN DETAILS ===== -->
       <div class="details-grid">
         <div class="details-box">
           <div class="details-title">BORROWER DETAILS</div>
@@ -132,7 +123,6 @@
         </div>
       </div>
 
-      <!-- ===== ACCOUNT BREAKDOWN ===== -->
       <div class="section-heading">ACCOUNT BREAKDOWN</div>
       <table class="soa-table">
         <thead>
@@ -145,7 +135,6 @@
         <tbody id="breakdownBody"></tbody>
       </table>
 
-      <!-- ===== TRANSACTION LEDGER ===== -->
       <div class="section-heading">TRANSACTION LEDGER</div>
       <table class="soa-table">
         <thead>
@@ -159,7 +148,6 @@
         <tbody id="ledgerBody"></tbody>
       </table>
 
-      <!-- ===== FOOTER ===== -->
       <div class="soa-footer">
         <div class="footer-note">
           <b>Note:</b> This is a computer-generated Statement of Account. For any discrepancy,
