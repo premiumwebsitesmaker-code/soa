@@ -1,24 +1,25 @@
-// =====================================================
-//  SOA CRM - Calculation + PDF Generation
-// =====================================================
+/* ============================================================
+   NIFCPL — SOA CRM Logic + PDF Generation
+   Smart Reverse Calculation for Maximum Discount Display
+   ============================================================ */
 
 const $ = (id) => document.getElementById(id);
 
-// Set default dates
+// Set default statement date to today
 window.addEventListener('DOMContentLoaded', () => {
   $('statementDate').valueAsDate = new Date();
-  $('disbursalDate').valueAsDate = new Date('2020-02-11');
 });
 
-// Utility: format currency in Indian style
+// ---------- Utilities ----------
 function inr(num) {
-  return '₹' + Number(num).toLocaleString('en-IN', {
+  const n = Number(num);
+  const sign = n < 0 ? '-' : '';
+  return sign + '₹' + Math.abs(n).toLocaleString('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 }
 
-// Utility: format date as DD/MM/YYYY
 function fmtDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -28,57 +29,68 @@ function fmtDate(dateStr) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
-// Utility: days between two dates
 function daysBetween(d1, d2) {
   const oneDay = 24 * 60 * 60 * 1000;
   return Math.round(Math.abs((new Date(d2) - new Date(d1)) / oneDay));
 }
 
-// =====================================================
-//  MAIN CALCULATION
-// =====================================================
+function addDays(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// ============================================================
+//  SMART CALCULATION — Reverse Discount Engine
+// ============================================================
 function calculateSOA() {
-  const principal      = parseFloat($('principal').value) || 0;
-  const disbDate       = $('disbursalDate').value;
-  const stmtDate       = $('statementDate').value;
-  const rateFirst      = parseFloat($('interestRate').value) || 4;
-  const defaultRate    = parseFloat($('defaultRate').value) || 3;
-  const penalBase      = parseFloat($('penalBase').value) || 1500;
-  const waiver         = parseFloat($('waiver').value) || 0;
+  const principal    = parseFloat($('principal').value) || 0;
+  const disbDate     = $('disbursalDate').value;
+  const stmtDate     = $('statementDate').value;
+  const rateFirst    = parseFloat($('interestRate').value) || 4;
+  const defaultRate  = parseFloat($('defaultRate').value) || 3;
+  const penalBase    = parseFloat($('penalBase').value) || 1500;
+  const finalOverdue = parseFloat($('finalOverdue').value) || 0;
 
-  // Days calculation
-  const first7Days     = 7;
-  const totalDays      = daysBetween(disbDate, stmtDate);
-  const postDueDays    = totalDays - first7Days;
+  const first7Days   = 7;
+  const totalDays    = daysBetween(disbDate, stmtDate);
+  const postDueDays  = totalDays - first7Days;
 
-  // Interest calculations
-  const first7Interest = principal * (rateFirst / 100) * (first7Days / 30);
+  // Forward calculation
+  const first7Interest  = principal * (rateFirst / 100) * (first7Days / 30);
   const postDueInterest = principal * (rateFirst / 100) * (postDueDays / 30);
-  const total4Interest = first7Interest + postDueInterest;
+  const total4Interest  = first7Interest + postDueInterest;
   const defaultInterest = principal * (defaultRate / 100) * (postDueDays / 30);
 
-  // Penal charges: ₹1500 × completed years
   const completedYears = Math.floor(totalDays / 365);
   const penalCharges   = penalBase * completedYears;
 
-  // Total outstanding
   const totalOutstanding = principal + total4Interest + defaultInterest + penalCharges;
 
-  // Net payable
-  const netPayable = totalOutstanding - waiver;
+  // 🔥 REVERSE CALCULATION: Discount = Outstanding − Final Overdue
+  let waiver = totalOutstanding - finalOverdue;
+
+  // Safety: Waiver cannot be negative
+  if (waiver < 0) waiver = 0;
+
+  // Net payable = Final overdue (fixed)
+  const netPayable = finalOverdue;
 
   return {
-    principal, disbDate, stmtDate, rateFirst, defaultRate,
+    principal, disbDate, stmtDate, rateFirst, defaultRate, penalBase,
     first7Days, totalDays, postDueDays,
     first7Interest, postDueInterest, total4Interest,
     defaultInterest, penalCharges, completedYears,
-    totalOutstanding, waiver, netPayable
+    totalOutstanding, waiver, netPayable, finalOverdue
   };
 }
 
-// =====================================================
+// ============================================================
 //  RENDER SOA
-// =====================================================
+// ============================================================
 function renderSOA() {
   const data = calculateSOA();
 
@@ -100,12 +112,12 @@ function renderSOA() {
     },
     {
       comp: `First 7 Days Interest @ ${data.rateFirst}% p.m. SI`,
-      calc: `${data.principal} × ${data.rateFirst}% × 7/30`,
+      calc: `${data.principal.toFixed(2)} × ${data.rateFirst}% × 7/30`,
       amt: data.first7Interest
     },
     {
       comp: `Post-Due Interest @ ${data.rateFirst}% p.m. SI`,
-      calc: `${data.principal} × ${data.rateFirst}% × ${data.postDueDays}/30`,
+      calc: `${data.principal.toFixed(2)} × ${data.rateFirst}% × ${data.postDueDays}/30`,
       amt: data.postDueInterest
     },
     {
@@ -116,12 +128,12 @@ function renderSOA() {
     },
     {
       comp: `Default Interest @ ${data.defaultRate}% p.m. SI`,
-      calc: `${data.principal} × ${data.defaultRate}% × ${data.postDueDays}/30`,
+      calc: `${data.principal.toFixed(2)} × ${data.defaultRate}% × ${data.postDueDays}/30`,
       amt: data.defaultInterest
     },
     {
       comp: 'Penal Charges',
-      calc: `${inr(parseFloat($('penalBase').value))} × ${data.completedYears} completed years`,
+      calc: `${inr(data.penalBase)} × ${data.completedYears} completed years`,
       amt: data.penalCharges
     },
     {
@@ -206,7 +218,6 @@ function renderSOA() {
     </tr>`;
   });
 
-  // Final net balance row
   lhtml += `<tr class="final-row">
     <td colspan="3">Net Outstanding Balance</td>
     <td class="right">${inr(data.netPayable)} (${$('accountStatus').value || 'DEFAULT'})</td>
@@ -214,36 +225,31 @@ function renderSOA() {
 
   $('ledgerBody').innerHTML = lhtml;
 
+  // ---------- SAVINGS HIGHLIGHT ----------
+  $('savingsAmount').textContent = inr(data.waiver);
+  $('savingsFinal').textContent  = inr(data.netPayable);
+
   // Show preview
   $('soaPreview').classList.remove('hidden');
   $('soaPreview').scrollIntoView({ behavior: 'smooth' });
 }
 
-// Helper: add days to date string → DD/MM/YYYY
-function addDays(dateStr, days) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-// =====================================================
-//  PDF DOWNLOAD (Exact SOA format)
-// =====================================================
+// ============================================================
+//  PDF DOWNLOAD
+// ============================================================
 async function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const element = $('soaContent');
 
-  // Wait a tick to ensure rendering
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 250));
 
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale: 2.5,
     useCORS: true,
     backgroundColor: '#ffffff',
-    logging: false
+    logging: false,
+    windowWidth: element.scrollWidth,
+    windowHeight: element.scrollHeight
   });
 
   const imgData = canvas.toDataURL('image/png');
@@ -251,18 +257,18 @@ async function downloadPDF() {
 
   const pageWidth  = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 8;
-  const imgWidth  = pageWidth - margin * 2;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  const margin     = 8;
+  const imgWidth   = pageWidth - margin * 2;
+  const imgHeight  = (canvas.height * imgWidth) / canvas.width;
 
   let heightLeft = imgHeight;
-  let position = margin;
+  let position   = margin;
 
   pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
   heightLeft -= (pageHeight - margin * 2);
 
   while (heightLeft > 0) {
-    position = heightLeft - imgHeight + margin;
+    position = margin - (imgHeight - heightLeft);
     pdf.addPage();
     pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
     heightLeft -= (pageHeight - margin * 2);
@@ -270,15 +276,18 @@ async function downloadPDF() {
 
   const name = ($('customerName').value || 'Customer').replace(/\s+/g, '_');
   const pan  = ($('panNumber').value || 'PAN').toUpperCase();
-  pdf.save(`Statement_of_Account_${name}_${pan}.pdf`);
+  const date = new Date().toISOString().slice(0, 10);
+
+  pdf.save(`SOA_${name}_${pan}_${date}.pdf`);
 }
 
-// =====================================================
+// ============================================================
 //  EVENT LISTENERS
-// =====================================================
+// ============================================================
 $('generateBtn').addEventListener('click', renderSOA);
 $('downloadPdfBtn').addEventListener('click', downloadPDF);
 $('editBtn').addEventListener('click', () => {
   $('soaPreview').classList.add('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+$('printBtn').addEventListener('click', () => window.print());
