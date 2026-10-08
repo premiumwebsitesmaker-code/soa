@@ -4,10 +4,12 @@
 
 const $ = (id) => document.getElementById(id);
 
+// Set default statement date to today
 window.addEventListener('DOMContentLoaded', () => {
   $('statementDate').valueAsDate = new Date();
 });
 
+// ---------- Utilities ----------
 function inr(num) {
   const n = Number(num);
   const sign = n < 0 ? '-' : '';
@@ -27,11 +29,13 @@ function fmtDate(dateStr) {
 }
 
 function daysBetween(d1, d2) {
+  if (!d1 || !d2) return 0;
   const oneDay = 24 * 60 * 60 * 1000;
   return Math.round(Math.abs((new Date(d2) - new Date(d1)) / oneDay));
 }
 
 function addDays(dateStr, days) {
+  if (!dateStr) return '—';
   const d = new Date(dateStr);
   d.setDate(d.getDate() + days);
   const dd = String(d.getDate()).padStart(2, '0');
@@ -54,7 +58,7 @@ function calculateSOA() {
 
   const first7Days   = 7;
   const totalDays    = daysBetween(disbDate, stmtDate);
-  const postDueDays  = totalDays - first7Days;
+  const postDueDays  = totalDays > 7 ? (totalDays - first7Days) : 0;
 
   const first7Interest  = principal * (rateFirst / 100) * (first7Days / 30);
   const postDueInterest = principal * (rateFirst / 100) * (postDueDays / 30);
@@ -66,7 +70,7 @@ function calculateSOA() {
 
   const totalOutstanding = principal + total4Interest + defaultInterest + penalCharges;
 
-  // 🔥 Waiver = Outstanding − FinalOverdue
+  // Waiver = Outstanding − FinalOverdue
   let waiver = totalOutstanding - finalOverdue;
   if (waiver < 0) waiver = 0;
 
@@ -85,11 +89,34 @@ function calculateSOA() {
 //  RENDER SOA
 // ============================================================
 function renderSOA() {
+  // ✅ SAFE VALIDATION — sirf itna check karo ki dates aur amounts ho
+  if (!$('disbursalDate').value) {
+    alert('Please select Date of Disbursal');
+    $('disbursalDate').focus();
+    return;
+  }
+  if (!$('statementDate').value) {
+    alert('Please select Statement Date');
+    $('statementDate').focus();
+    return;
+  }
+  if (!$('principal').value || parseFloat($('principal').value) <= 0) {
+    alert('Please enter Principal Disbursed Amount');
+    $('principal').focus();
+    return;
+  }
+  if (!$('finalOverdue').value || parseFloat($('finalOverdue').value) <= 0) {
+    alert('Please enter Customer Final Overdue Amount');
+    $('finalOverdue').focus();
+    return;
+  }
+
   const data = calculateSOA();
 
-  $('outName').textContent     = $('customerName').value || '—';
-  $('outPan').textContent      = $('panNumber').value || '—';
-  $('outStatus').textContent   = $('accountStatus').value || '—';
+  // ---------- Customer Details (safe fallback with —) ----------
+  $('outName').textContent     = $('customerName').value.trim() || '—';
+  $('outPan').textContent      = $('panNumber').value.trim().toUpperCase() || '—';
+  $('outStatus').textContent   = $('accountStatus').value.trim() || '—';
   $('outDisbDate').textContent = fmtDate(data.disbDate);
 
   const disbFmt = fmtDate(data.disbDate);
@@ -212,9 +239,11 @@ function renderSOA() {
     </tr>`;
   });
 
+  const status = $('accountStatus').value.trim() || 'DEFAULT';
+
   lhtml += `<tr class="final-row">
     <td colspan="3">Net Outstanding Balance</td>
-    <td class="right">${inr(data.netPayable)} (${$('accountStatus').value || 'DEFAULT'})</td>
+    <td class="right">${inr(data.netPayable)} (${status})</td>
   </tr>`;
 
   $('ledgerBody').innerHTML = lhtml;
@@ -263,8 +292,8 @@ async function downloadPDF() {
     heightLeft -= (pageHeight - margin * 2);
   }
 
-  const name = ($('customerName').value || 'Customer').replace(/\s+/g, '_');
-  const pan  = ($('panNumber').value || 'PAN').toUpperCase();
+  const name = ($('customerName').value.trim() || 'Customer').replace(/\s+/g, '_');
+  const pan  = ($('panNumber').value.trim() || 'PAN').toUpperCase();
   const date = new Date().toISOString().slice(0, 10);
 
   pdf.save(`SOA_${name}_${pan}_${date}.pdf`);
